@@ -56,8 +56,8 @@ class VirtualEngineControl(object):
 
 class PWMEngineControl(VirtualEngineControl):
     value_off = 0.05
-    value_min = 0.082
-    value_max = 0.5
+    value_min = 0.062
+    value_max = 0.2
     def _calc_value(self, m):
         if self.status:
             value_range = self.value_max - self.value_min
@@ -67,8 +67,13 @@ class PWMEngineControl(VirtualEngineControl):
 
     def _update(self):
         with open('/var/run/pwm', 'w') as f:
-            f.write('0=%f\n' % self._calc_value(self.m1))
-            f.write('1=%f\n' % self._calc_value(self.m1))
-            f.write('2=%f\n' % self._calc_value(self.m1))
-            f.write('3=%f\n' % self._calc_value(self.m1))
+            v1 = self._calc_value(self.m1)
+            v2 = self._calc_value(self.m2)
+            v3 = self._calc_value(self.m3)
+            v4 = self._calc_value(self.m4)
+            f.write('0=%f\n' % v1)
+            f.write('1=%f\n' % v2)
+            f.write('2=%f\n' % v3)
+            f.write('3=%f\n' % v4)
+            print v1, v2, v3, v4
 

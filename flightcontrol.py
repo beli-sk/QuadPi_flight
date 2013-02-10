@@ -30,6 +30,14 @@ GYRO_GAIN = (0.01, 0.01, 0.01)
 GYRO_MIN = 5 # minimum threshold
 CONTROL_GAIN = (1, 1, 1)
 
+def crop_range(v, min, max):
+    if v < min:
+        return min
+    elif v > max:
+        return max
+    else:
+        return v
+
 class Flight(object):
     def __init__(self, engine, gyro, comm):
         self.engine = engine
@@ -88,14 +96,10 @@ class Flight(object):
         om3 -= CONTROL_GAIN[2] * yaw
         om4 += CONTROL_GAIN[2] * yaw
 
-        if om1 > 1000:
-            om1 = 1000
-        if om2 > 1000:
-            om2 = 1000
-        if om3 > 1000:
-            om3 = 1000
-        if om4 > 1000:
-            om4 = 1000
+        om1 = crop_range(om1, 0, 1000)
+        om2 = crop_range(om2, 0, 1000)
+        om3 = crop_range(om3, 0, 1000)
+        om4 = crop_range(om4, 0, 1000)
 
         return (om1, om2, om3, om4)
 
@@ -116,7 +120,7 @@ class Flight(object):
                 self.engine.startup()
             om1, om2, om3, om4 = self._calculate_power((gx, gy, gz), (thr, pitch, roll, yaw))
             self.engine.set_power((om1, om2, om3, om4))
-            print int(om1), int(om2), int(om3), int(om4)
+            #print int(om1), int(om2), int(om3), int(om4)
         self.comm.motors = (om1, om2, om3, om4)
         self.comm.transmit()
         time.sleep(0.2)

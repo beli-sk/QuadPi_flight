@@ -35,7 +35,7 @@ class FlightComm(object):
     WARN = 3
     ERR = 4
     prio = {1: 'DEBUG', 2: 'INFO', 3: 'WARN', 4: 'ERR'}
-    addr = ('127.0.0.1', 31512)
+    addr = ('', 31512)
 
     def __init__(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -71,7 +71,7 @@ class FlightComm(object):
                     print "Short packet received"
                 else:
                     self.controls = struct.unpack('<hhhh', s)
-                    print self.controls
+                    #print self.controls
             else:
                 sys.stdout.write('unknown byte (%d)\n' % ord(c))
 
