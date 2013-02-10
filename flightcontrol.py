@@ -21,12 +21,13 @@
 
 import time
 
-#from IMU_sensors.itg3200 import SensorITG3200
-from virtualsensors import VirtualSensor as Sensor
+from IMU_sensors.itg3200 import SensorITG3200 as Sensor
+#from virtualsensors import VirtualSensor as Sensor
 from enginecontrol import PWMEngineControl as EngineControl
+#from enginecontrol import VirtualEngineControl as EngineControl
 from flightcomm import FlightComm
 
-GYRO_GAIN = (0.01, 0.01, 0.01)
+GYRO_GAIN = (0.05, -0.05, 0.05)
 GYRO_MIN = 5 # minimum threshold
 CONTROL_GAIN = (1, 1, 1)
 
@@ -58,6 +59,7 @@ class Flight(object):
 
     def _calculate_power(self, gyro, controls):
         gx, gy, gz = gyro
+        print (gx, gy, gz)
         thr, pitch, roll, yaw = controls
         om1, om2, om3, om4 = (thr, thr, thr, thr)
 
@@ -106,7 +108,7 @@ class Flight(object):
     def _control_loop(self):
         gx, gy, gz = self.gyro.read_data()
         #m1, m2, m3, m4 = self.engine.get_power()
-        thr, pitch, roll, yaw = self.comm.get_controls()
+        thr, roll, pitch, yaw = self.comm.get_controls()
         if thr == 0:
             # engine off
             if self.engine.get_status():
@@ -123,7 +125,7 @@ class Flight(object):
             #print int(om1), int(om2), int(om3), int(om4)
         self.comm.motors = (om1, om2, om3, om4)
         self.comm.transmit()
-        time.sleep(0.2)
+        time.sleep(0.04)
 
 
 if __name__ == '__main__':

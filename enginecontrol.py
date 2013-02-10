@@ -71,9 +71,10 @@ class PWMEngineControl(VirtualEngineControl):
             v2 = self._calc_value(self.m2)
             v3 = self._calc_value(self.m3)
             v4 = self._calc_value(self.m4)
-            f.write('0=%f\n' % v1)
-            f.write('1=%f\n' % v2)
-            f.write('2=%f\n' % v3)
-            f.write('3=%f\n' % v4)
+            # note that motors are not connected in pin order
+            f.write('0=%f\n' % v4)
+            f.write('1=%f\n' % v1)
+            f.write('2=%f\n' % v2)
+            f.write('3=%f\n' % v3)
             print v1, v2, v3, v4
 
