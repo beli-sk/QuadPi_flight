@@ -21,7 +21,8 @@
 
 import time
 
-from IMU_sensors.itg3200 import SensorITG3200
+#from IMU_sensors.itg3200 import SensorITG3200
+from virtualsensors import VirtualSensor as SensorITG3200
 from enginecontrol import VirtualEngineControl
 from flightcomm import FlightComm
 
@@ -59,48 +60,39 @@ class Flight(object):
         om1, om2, om3, om4 = (thr, thr, thr, thr)
 
         # X-axis (roll) stabilization
-        if gx > GYRO_MIN:
-            om2 += GYRO_GAIN[0] * abs(gx)
-            om3 += GYRO_GAIN[0] * abs(gx)
-        elif gx < -GYRO_MIN:
-            om1 += GYRO_GAIN[0] * abs(gx)
-            om4 += GYRO_GAIN[0] * abs(gx)
+        if abs(gx) > GYRO_MIN:
+            om1 += GYRO_GAIN[0] * gx
+            om2 += GYRO_GAIN[0] * gx
+            om3 += GYRO_GAIN[0] * gx
+            om4 += GYRO_GAIN[0] * gx
         # Y-axis (pitch) stabilization
-        if gy > GYRO_MIN:
-            om3 += GYRO_GAIN[1] * abs(gy)
-            om4 += GYRO_GAIN[1] * abs(gy)
-        elif gy < -GYRO_MIN:
-            om1 += GYRO_GAIN[1] * abs(gy)
-            om2 += GYRO_GAIN[1] * abs(gy)
+        if abs(gy) > GYRO_MIN:
+            om1 += GYRO_GAIN[1] * gy
+            om2 += GYRO_GAIN[1] * gy
+            om3 += GYRO_GAIN[1] * gy
+            om4 += GYRO_GAIN[1] * gy
         # Z-axis (yaw) stabilixation
-        if gz > GYRO_MIN:
-            om1 += GYRO_GAIN[2] * abs(gz)
-            om3 += GYRO_GAIN[2] * abs(gz)
-        elif gz < -GYRO_MIN:
-            om2 += GYRO_GAIN[2] * abs(gz)
-            om4 += GYRO_GAIN[2] * abs(gz)
+        if abs(gz) > GYRO_MIN:
+            om1 += GYRO_GAIN[2] * gz
+            om2 += GYRO_GAIN[2] * gz
+            om3 += GYRO_GAIN[2] * gz
+            om4 += GYRO_GAIN[2] * gz
 
         # roll control
-        if roll > 0:
-            om1 += CONTROL_GAIN[0] * abs(roll)
-            om4 += CONTROL_GAIN[0] * abs(roll)
-        elif roll < 0:
-            om2 += CONTROL_GAIN[0] * abs(roll)
-            om3 += CONTROL_GAIN[0] * abs(roll)
+        om1 += CONTROL_GAIN[0] * roll
+        om2 += CONTROL_GAIN[0] * roll
+        om3 += CONTROL_GAIN[0] * roll
+        om4 += CONTROL_GAIN[0] * roll
         # pitch control
-        if pitch > 0:
-            om1 += CONTROL_GAIN[1] * abs(pitch)
-            om2 += CONTROL_GAIN[1] * abs(pitch)
-        elif pitch < 0:
-            om3 += CONTROL_GAIN[1] * abs(pitch)
-            om4 += CONTROL_GAIN[1] * abs(pitch)
+        om1 += CONTROL_GAIN[1] * pitch
+        om2 += CONTROL_GAIN[1] * pitch
+        om3 += CONTROL_GAIN[1] * pitch
+        om4 += CONTROL_GAIN[1] * pitch
         # yaw control
-        if yaw > 0:
-            om2 += CONTROL_GAIN[2] * abs(yaw)
-            om4 += CONTROL_GAIN[2] * abs(yaw)
-        elif yaw < 0:
-            om1 += CONTROL_GAIN[2] * abs(yaw)
-            om3 += CONTROL_GAIN[2] * abs(yaw)
+        om1 += CONTROL_GAIN[2] * yaw
+        om2 += CONTROL_GAIN[2] * yaw
+        om3 += CONTROL_GAIN[2] * yaw
+        om4 += CONTROL_GAIN[2] * yaw
         
         self.engine.set_power((om1, om2, om3, om4))
         print int(om1), int(om2), int(om3), int(om4)
