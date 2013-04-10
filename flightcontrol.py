@@ -38,6 +38,7 @@ class Flight(object):
 
     def take_control(self):
         """Entry point"""
+        self.comm.log(self.comm.INFO, "init comm")
         self.comm.contact()
         while not self.comm.get_status():
             time.sleep(0.2)
