@@ -63,36 +63,36 @@ class Flight(object):
         # X-axis (roll) stabilization
         if abs(gx) > GYRO_MIN:
             om1 += GYRO_GAIN[0] * gx
-            om2 += GYRO_GAIN[0] * gx
+            om2 -= GYRO_GAIN[0] * gx
             om3 += GYRO_GAIN[0] * gx
-            om4 += GYRO_GAIN[0] * gx
+            om4 -= GYRO_GAIN[0] * gx
         # Y-axis (pitch) stabilization
         if abs(gy) > GYRO_MIN:
             om1 += GYRO_GAIN[1] * gy
             om2 += GYRO_GAIN[1] * gy
-            om3 += GYRO_GAIN[1] * gy
-            om4 += GYRO_GAIN[1] * gy
+            om3 -= GYRO_GAIN[1] * gy
+            om4 -= GYRO_GAIN[1] * gy
         # Z-axis (yaw) stabilixation
         if abs(gz) > GYRO_MIN:
             om1 += GYRO_GAIN[2] * gz
-            om2 += GYRO_GAIN[2] * gz
-            om3 += GYRO_GAIN[2] * gz
+            om2 -= GYRO_GAIN[2] * gz
+            om3 -= GYRO_GAIN[2] * gz
             om4 += GYRO_GAIN[2] * gz
 
         # roll control
         om1 += CONTROL_GAIN[0] * roll
-        om2 += CONTROL_GAIN[0] * roll
+        om2 -= CONTROL_GAIN[0] * roll
         om3 += CONTROL_GAIN[0] * roll
-        om4 += CONTROL_GAIN[0] * roll
+        om4 -= CONTROL_GAIN[0] * roll
         # pitch control
         om1 += CONTROL_GAIN[1] * pitch
         om2 += CONTROL_GAIN[1] * pitch
-        om3 += CONTROL_GAIN[1] * pitch
-        om4 += CONTROL_GAIN[1] * pitch
+        om3 -= CONTROL_GAIN[1] * pitch
+        om4 -= CONTROL_GAIN[1] * pitch
         # yaw control
         om1 += CONTROL_GAIN[2] * yaw
-        om2 += CONTROL_GAIN[2] * yaw
-        om3 += CONTROL_GAIN[2] * yaw
+        om2 -= CONTROL_GAIN[2] * yaw
+        om3 -= CONTROL_GAIN[2] * yaw
         om4 += CONTROL_GAIN[2] * yaw
         
         self.engine.set_power((om1, om2, om3, om4))
