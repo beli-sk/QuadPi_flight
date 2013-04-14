@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # vim: ai:ts=4:sw=4:sts=4:et:fileencoding=utf-8
 #
-# Quad/Pi Flight Controller
+# Quad/Pi Virtual Sensors
 #
 # Copyright 2013 Michal Belica <devel@beli.sk>
 #
