@@ -19,8 +19,10 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #
 
+import sys
 import socket
 import struct
+from cStringIO import StringIO
 
 class CommError(Exception):
     pass
@@ -38,30 +40,61 @@ class FlightComm(object):
     def __init__(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sock.bind(self.addr)
+        self.sock.setblocking(0)
         self.controls = (0, 0, 0, 0)
+        self.motors = (0, 0, 0, 0)
+        self.status = 0
+        self.remaddr = None
+
+    def transmit(self):
+        if self.remaddr:
+            s = 'M'
+            s += struct.pack('<hhhh',
+                    self.motors[0],
+                    self.motors[1],
+                    self.motors[2],
+                    self.motors[3],
+                    )
+            self.sock.sendto(s, self.remaddr)
+
+    def _parse_packets(self, data):
+        sio = StringIO(data)
+        while True:
+            c = sio.read(1)
+            if len(c) == 0:
+                break
+            if c == 'C':
+                # controls
+                s = sio.read(8)
+                if len(s) != 8:
+                    print "Short packet received"
+                else:
+                    self.controls = struct.unpack('<hhhh', s)
+                    print self.controls
+            else:
+                sys.stdout.write('unknown byte (%d)\n' % ord(c))
 
     def receive(self):
-        try:
-            s = self.sock.recv(4)
-        except socket.error as e:
-            if e[0] == 11:
-                # no data
-                pass
-            else:
-                raise
-        else:
-            self.controls = struct.unpack('<bbbb', s)
+        done = False
+        s = ''
+        while not done:
+            try:
+                ss, self.remaddr = self.sock.recvfrom(4096)
+                if len(ss) == 0:
+                    done = True
+                else:
+                    s += ss
+            except socket.error as e:
+                if e[0] == 11: # Resource temporarily unavailable
+                    done = True
+                else:
+                    raise
+        if len(s) > 0:
+            self._parse_packets(s)
 
     def log(self, prio, msg):
         print self.prio[prio], msg
-
-    def contact(self):
-        self.sock.connect(self.addr)
-        self.sock.sendall('Quad/Pi P1\n')
-        s = self.sock.recv(3)
-        if s != 'OK\n':
-            raise ProtocolError('Handshake fail')
-        self.sock.setblocking(0)
 
     def get_status(self):
         return True
@@ -70,5 +103,8 @@ class FlightComm(object):
         """Get positions of pilot controls
         Returns tuple of throttle, roll, pitch and yaw"""
         self.receive()
-        return (0,0,0,0)
+        return self.controls
+
+    def contact(self):
+        pass
 

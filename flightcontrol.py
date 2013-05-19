@@ -22,8 +22,8 @@
 import time
 
 #from IMU_sensors.itg3200 import SensorITG3200
-from virtualsensors import VirtualSensor as SensorITG3200
-from enginecontrol import VirtualEngineControl
+from virtualsensors import VirtualSensor as Sensor
+from enginecontrol import PWMEngineControl as EngineControl
 from flightcomm import FlightComm
 
 GYRO_GAIN = (0.01, 0.01, 0.01)
@@ -45,19 +45,12 @@ class Flight(object):
         self.comm.log(self.comm.INFO, "comm READY")
         self.comm.log(self.comm.INFO, "init gyro")
         self.gyro.default_init()
-        self.comm.log(self.comm.INFO, "starting engine")
-        self.engine.startup()
-        while not self.engine.get_status():
-            time.sleep(0.2)
-        self.comm.log(self.comm.INFO, "engine READY")
         while True:
-            self.control_loop()
+            self._control_loop()
 
-    def control_loop(self):
-        gx, gy, gz = self.gyro.read_data()
-        m1, m2, m3, m4 = self.engine.get_power()
-        thr, roll, pitch, yaw = self.comm.get_controls()
-        
+    def _calculate_power(self, gyro, controls):
+        gx, gy, gz = gyro
+        thr, pitch, roll, yaw = controls
         om1, om2, om3, om4 = (thr, thr, thr, thr)
 
         # X-axis (roll) stabilization
@@ -94,16 +87,45 @@ class Flight(object):
         om2 -= CONTROL_GAIN[2] * yaw
         om3 -= CONTROL_GAIN[2] * yaw
         om4 += CONTROL_GAIN[2] * yaw
-        
-        self.engine.set_power((om1, om2, om3, om4))
-        print int(om1), int(om2), int(om3), int(om4)
+
+        if om1 > 1000:
+            om1 = 1000
+        if om2 > 1000:
+            om2 = 1000
+        if om3 > 1000:
+            om3 = 1000
+        if om4 > 1000:
+            om4 = 1000
+
+        return (om1, om2, om3, om4)
+
+    def _control_loop(self):
+        gx, gy, gz = self.gyro.read_data()
+        #m1, m2, m3, m4 = self.engine.get_power()
+        thr, pitch, roll, yaw = self.comm.get_controls()
+        if thr == 0:
+            # engine off
+            if self.engine.get_status():
+                self.comm.log(self.comm.INFO, "engine shutdown")
+                self.engine.shutdown()
+            om1, om2, om3, om4 = (0,0,0,0)
+        else:
+            # engine on
+            if not self.engine.get_status():
+                self.comm.log(self.comm.INFO, "engine startup")
+                self.engine.startup()
+            om1, om2, om3, om4 = self._calculate_power((gx, gy, gz), (thr, pitch, roll, yaw))
+            self.engine.set_power((om1, om2, om3, om4))
+            print int(om1), int(om2), int(om3), int(om4)
+        self.comm.motors = (om1, om2, om3, om4)
+        self.comm.transmit()
         time.sleep(0.2)
 
 
 if __name__ == '__main__':
     flight = Flight(
-        VirtualEngineControl(),
-        SensorITG3200(1, 0x68),
+        EngineControl(),
+        Sensor(1, 0x68),
         FlightComm()
         )
     flight.take_control()

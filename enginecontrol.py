@@ -27,24 +27,48 @@ class VirtualEngineControl(object):
         self.m2 = 0
         self.m3 = 0
         self.m4 = 0
+    def _update(self):
+        pass
     def startup(self):
         """Start engines"""
         self.status = True
         self.m1, self.m2, self.m3, self.m4 = (0, 0, 0, 0)
+        self._update()
     def shutdown(self):
         """Shutdown engines"""
         self.status = False
         self.m1, self.m2, self.m3, self.m4 = (0, 0, 0, 0)
+        self._update()
     def get_power(self):
         """Get current engine power setting
-        Returns engine power settings as tuple of four percentual values
+        Returns engine power settings as tuple of four values
         """
         return (self.m1, self.m2, self.m3, self.m4)
     def set_power(self, m):
         """Set engine power.
         Params:
-            m .. power for each engine as tuple of four percentual values
+            m .. power for each engine as tuple of four values
         """
         self.m1, self.m2, self.m3, self.m4 = m
+        self._update()
 	def get_status(self):
 		return self.status
+
+class PWMEngineControl(VirtualEngineControl):
+    value_off = 0.05
+    value_min = 0.082
+    value_max = 0.5
+    def _calc_value(self, m):
+        if self.status:
+            value_range = self.value_max - self.value_min
+            return self.value_min + (value_range / 1000.0 * m)
+        else:
+            return self.value_off
+
+    def _update(self):
+        with open('/var/run/pwm', 'w') as f:
+            f.write('0=%f\n' % self._calc_value(self.m1))
+            f.write('1=%f\n' % self._calc_value(self.m1))
+            f.write('2=%f\n' % self._calc_value(self.m1))
+            f.write('3=%f\n' % self._calc_value(self.m1))
+
